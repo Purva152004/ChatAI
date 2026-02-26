@@ -11,37 +11,13 @@ const modelsRouter = require('./routes/models');
 
 const app = express();
 
-// Allowed origins
-const allowedOrigins = [
-  'http://localhost:5173',   // Vite frontend
-  process.env.FRONTEND_URL   // Production frontend
-];
 
 app.use(cors({
-  origin: function (origin, callback) {
-
-    // Allow requests with no origin (Postman, curl)
-    if (!origin) return callback(null, true);
-
-    // Allow if in allowedOrigins
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    // Allow Netlify domains
-    try {
-      const hostname = new URL(origin).hostname;
-      if (hostname.endsWith('.netlify.app')) {
-        return callback(null, true);
-      }
-    } catch (err) {}
-
-    console.warn('CORS blocked origin:', origin);
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: [
+    'http://localhost:5173',
+    'https://chat-ai-amber-five.vercel.app'
+  ],
+  credentials: true
 }));
 
 
