@@ -1,30 +1,53 @@
 // frontend/src/api.jsx
-const rawBase = import.meta.env.VITE_API_BASE || (
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost')
-    ? 'http://localhost:4000/api'
-    : '/api'
-);
 
-// strip trailing slash if present
-export const API_BASE = rawBase.replace(/\/+$/, ''); // no trailing slash
+// Use environment variable in production
+const API_BASE =
+  import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-async function safeFetch(path, opts) {
-  // ensure path starts with a single slash
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const url = `${API_BASE}${normalizedPath}`;
-  const res = await fetch(url, opts);
-  const text = await res.text();
-  try { return JSON.parse(text); } catch (e) { return { success: false, raw: text, status: res.status }; }
+// Remove trailing slash if exists
+const BASE = API_BASE.replace(/\/+$/, "");
+
+async function safeFetch(path, options = {}) {
+  const url = `${BASE}${path.startsWith("/") ? path : `/${path}`}`;
+
+  try {
+    const res = await fetch(url, options);
+    const data = await res.json();
+
+    if (!res.ok) {
+      return { success: false, error: data };
+    }
+
+    return data;
+  } catch (err) {
+    console.error("API Error:", err);
+    return { success: false, error: "Network error" };
+  }
 }
 
-export const getMessages = () => safeFetch('/messages');
-export const postMessage = (text, model) => safeFetch('/messages', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ text, model })
-});
-export const clearMessages = () => safeFetch('/messages/clear', { method: 'POST' });
-export const getModels = () => safeFetch('/models');
-export const getStats = () => safeFetch('/messages/stats');
+// API Methods
+export const getMessages = () => safeFetch("/messages");
 
-export default { getMessages, postMessage, clearMessages, getModels, getStats };
+export const postMessage = (text, model) =>
+  safeFetch("/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, model }),
+  });
+
+export const clearMessages = () =>
+  safeFetch("/messages/clear", {
+    method: "POST",
+  });
+
+export const getModels = () => safeFetch("/models");
+
+export const getStats = () => safeFetch("/messages/stats");
+
+export default {
+  getMessages,
+  postMessage,
+  clearMessages,
+  getModels,
+  getStats,
+};
